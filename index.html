@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>1-/Edit</title>
+    <title>2-/Edit</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
         input, button { margin: 10px; padding: 10px; display: block; width: 80%; margin: 10px auto; }
@@ -14,14 +14,31 @@
             font-size: 16px;
             color: #007bff;
             cursor: pointer;
+            display: inline-block;
+            margin-right: 10px;
         }
         .open-link:hover {
             text-decoration: underline;
+        }
+        iframe {
+            width: 90%;
+            height: 500px;
+            display: none;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
     <h2>Z1-edit</h2>
+
+    <!-- إدخال التوكن -->
+    <div>
+        <input type="text" id="tokenInput" placeholder="أدخل التوكن">
+        <button onclick="restoreValue('tokenInput')" title="آخر تعديل">⭐</button>
+    </div>
+
     <div>
         <input type="text" id="newTitle" placeholder="أدخل العنوان الجديد">
         <button onclick="restoreValue('newTitle')" title="آخر تعديل">⭐</button>
@@ -34,50 +51,63 @@
         <input type="text" id="newImage" placeholder="أدخل رابط الصورة الجديدة">
         <button onclick="restoreValue('newImage')" title="آخر تعديل">⭐</button>
     </div>
+    
     <button onclick="updateContent()">حفظ التعديل</button>
     <p id="status"></p>
 
-    <!-- رابط الصفحة -->
+    <!-- رابط الصفحة مع زر المعاينة -->
     <div class="link-container">
-        <a href="#" class="open-link" onclick="navigateToPage()">فتح الصفحة داخل نفس الصفحة</a>
+        <span class="open-link" onclick="navigateToPage()">فتح الصفحة داخل نفس الصفحة</span>
+        <button onclick="previewInIframe()" title="معاينة داخل الصفحة">👁️</button>
     </div>
 
+    <!-- IFRAME للمعاينة -->
+    <iframe id="previewFrame"></iframe>
+
     <script>
-        const username = "ZaiN-19994";  // ضع اسم المستخدم هنا
-        const repo = "-";    // ضع اسم المستودع هنا
-        const filePath = "main.html"; // ضع مسار الملف هنا
-        let token = prompt("أدخل التوكن الخاص بك:");
+        const username = "ZaiN-19994";
+        const repo = "-";
+        const filePath = "main.html";
+
+        // إذا كان التوكن موجود في localStorage يتم استخدامه، إذا لا يتم طلبه
+        let token = localStorage.getItem("githubToken");
+        if (!token) {
+            document.getElementById("tokenInput").placeholder = "أدخل التوكن";
+        } else {
+            document.getElementById("tokenInput").value = token;
+        }
 
         function encodeToBase64(str) {
             return btoa(unescape(encodeURIComponent(str)));
         }
 
         async function updateContent() {
+            token = document.getElementById("tokenInput").value;
+            localStorage.setItem("githubToken", token);
+
             const newTitle = document.getElementById("newTitle").value;
             const newLink = document.getElementById("newLink").value;
             const newImage = document.getElementById("newImage").value;
-            
+
             if (!newTitle && !newLink && !newImage) {
                 alert("يرجى إدخال بيانات جديدة للتحديث!");
                 return;
             }
-            
+
             const url = `https://api.github.com/repos/${username}/${repo}/contents/${filePath}`;
-            
+
             try {
-                // جلب بيانات الملف الحالي
                 const response = await fetch(url, {
                     headers: { Authorization: `token ${token}` }
                 });
-                
+
                 if (!response.ok) {
                     throw new Error(`فشل في جلب البيانات: ${response.statusText}`);
                 }
-                
+
                 const fileData = await response.json();
                 let content = decodeURIComponent(escape(atob(fileData.content)));
 
-                // تعديل البيانات حسب المدخلات
                 if (newTitle) {
                     content = content.replace(/<title>.*?<\/title>/, `<title>${newTitle}</title>`);
                 }
@@ -91,7 +121,6 @@
                     );
                 }
 
-                // إرسال التعديل
                 const updateResponse = await fetch(url, {
                     method: "PUT",
                     headers: { "Authorization": `token ${token}`, "Content-Type": "application/json" },
@@ -109,7 +138,7 @@
                     localStorage.setItem("lastImage", newImage);
                     setTimeout(() => {
                         document.getElementById("status").innerText = "";
-                    }, 10000); // 10000 ملي ثانية = 10 ثواني
+                    }, 10000);
                 } else {
                     throw new Error(`فشل في تعديل البيانات: ${updateResponse.statusText}`);
                 }
@@ -124,7 +153,8 @@
             if (id === "newTitle") value = localStorage.getItem("lastTitle") || "";
             if (id === "newLink") value = localStorage.getItem("lastLink") || "";
             if (id === "newImage") value = localStorage.getItem("lastImage") || "";
-            
+            if (id === "tokenInput") value = localStorage.getItem("githubToken") || "";
+
             if (value) {
                 document.getElementById(id).value = value;
             } else {
@@ -132,10 +162,15 @@
             }
         }
 
-        // الانتقال إلى الرابط داخل نفس الصفحة
         function navigateToPage() {
-            const pageLink = 'https://zain-19994.github.io/-/main.html'; // الرابط الثابت
+            const pageLink = 'https://zain-19994.github.io/-/main.html';
             window.location.href = pageLink;
+        }
+
+        function previewInIframe() {
+            const iframe = document.getElementById("previewFrame");
+            iframe.src = "https://zain-19994.github.io/-/main.html";
+            iframe.style.display = "block";
         }
     </script>
 </body>
