@@ -30,7 +30,18 @@
         const username = "ZaiN-19994";  // ضع اسم المستخدم هنا
         const repo = "-";    // ضع اسم المستودع هنا
         const filePath = "main.html"; // ضع مسار الملف هنا
-        let token = prompt("أدخل التوكن الخاص بك:");
+
+        // محاولة لاسترجاع التوكن من localStorage
+        let token = localStorage.getItem("githubToken");
+
+        // لو مفيش توكن في localStorage، نطلبه من المستخدم
+        if (!token) {
+            token = prompt("أدخل التوكن الخاص بك:");
+            // بعد إدخال التوكن، نخزنه في localStorage
+            if (token) {
+                localStorage.setItem("githubToken", token);
+            }
+        }
 
         function encodeToBase64(str) {
             return btoa(unescape(encodeURIComponent(str)));
