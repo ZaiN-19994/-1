@@ -119,6 +119,10 @@
                       /<meta property="og:image" content="(.*?)"\s*\/?>/,
                       `<meta property="og:image" content="${newImage}" />`
                     );
+                    content = content.replace(
+                        /<img class="poster" src="(.*?)" alt="بوستر الفيلم">/,
+                        `<img class="poster" src="${newImage}" alt="بوستر الفيلم">`
+                    );
                 }
 
                 const updateResponse = await fetch(url, {
