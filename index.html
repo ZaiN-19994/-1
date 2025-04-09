@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Z1-edit</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        input, button { margin: 10px; padding: 10px; display: block; width: 80%; margin: 10px auto; }
+    </style>
+</head>
+<body>
+    <h2>Z1-edit</h2>
+    <input type="text" id="newTitle" placeholder="أدخل العنوان الجديد">
+    <input type="text" id="newLink" placeholder="أدخل الرابط الجديد للفيديو">
+    <input type="text" id="newImage" placeholder="أدخل رابط الصورة الجديدة">
+    <button onclick="updateContent()">حفظ التعديل</button>
+    <p id="status"></p>
+
+    <script>
+        const username = "ZaiN-19994";  // ضع اسم المستخدم هنا
+        const repo = "-";    // ضع اسم المستودع هنا
+        const filePath = "main.html"; // ضع مسار الملف هنا
+        let token = prompt("أدخل التوكن الخاص بك:");
+
+        function encodeToBase64(str) {
+            return btoa(unescape(encodeURIComponent(str)));
+        }
+
+        async function updateContent() {
+            const newTitle = document.getElementById("newTitle").value;
+            const newLink = document.getElementById("newLink").value;
+            const newImage = document.getElementById("newImage").value;
+            
+            if (!newTitle && !newLink && !newImage) {
+                alert("يرجى إدخال بيانات جديدة للتحديث!");
+                return;
+            }
+            
+            const url = `https://api.github.com/repos/${username}/${repo}/contents/${filePath}`;
+            
+            try {
+                // جلب بيانات الملف الحالي
+                const response = await fetch(url, {
+                    headers: { Authorization: `token ${token}` }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`فشل في جلب البيانات: ${response.statusText}`);
+                }
+                
+                const fileData = await response.json();
+                let content = decodeURIComponent(escape(atob(fileData.content)));
+
+                // تعديل البيانات حسب المدخلات
+                if (newTitle) {
+                    content = content.replace(/<title>.*?<\/title>/, `<title>${newTitle}</title>`);
+                }
+                if (newLink) {
+                    content = content.replace(/file:"(https?:\/\/[^"\s]+)"/, `file:"${newLink}"`);
+                }
+                if (newImage) {
+                    content = content.replace(
+  /<meta property="og:image" content="(.*?)"\s*\/?>/,
+  `<meta property="og:image" content="${newImage}" />`
+);
+                }
+
+                // إرسال التعديل
+                const updateResponse = await fetch(url, {
+                    method: "PUT",
+                    headers: { "Authorization": `token ${token}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        message: "تحديث البيانات المطلوبة",
+                        content: encodeToBase64(content),
+                        sha: fileData.sha
+                    })
+                });
+
+                if (updateResponse.ok) {
+                    document.getElementById("status").innerText = "تم تعديل البيانات بنجاح!";
+                } else {
+                    throw new Error(`فشل في تعديل البيانات: ${updateResponse.statusText}`);
+                }
+            } catch (error) {
+                document.getElementById("status").innerText = "حدث خطأ أثناء التعديل!";
+                console.error("خطأ: ", error);
+            }
+        }
+    </script>
+</body>
+</html>
