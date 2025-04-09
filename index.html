@@ -79,6 +79,9 @@
 
                 if (updateResponse.ok) {
                     document.getElementById("status").innerText = "تم تعديل البيانات بنجاح!";
+                    setTimeout(() => {
+    document.getElementById("status").innerText = "";
+}, 10000); // 10000 ملي ثانية = 10 ثواني
                 } else {
                     throw new Error(`فشل في تعديل البيانات: ${updateResponse.statusText}`);
                 }
