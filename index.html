@@ -167,7 +167,9 @@
         }
 
         function navigateToPage() {
-    const pageLink = "https://111-53d.pages.dev/?source=allowed";
+    localStorage.setItem("access_token", "allowed");
+
+    const pageLink = "https://111-53d.pages.dev/";
     window.location.href = pageLink;
 }
 
